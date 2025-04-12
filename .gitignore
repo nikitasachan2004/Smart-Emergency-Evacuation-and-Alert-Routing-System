@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraAlert - Disaster Safety Hub</title>
+    <meta name="description" content="Real-time disaster alerts, risk assessment, news, evacuation guidance, and personal safety details management.">
+
+    <!-- Mapbox GL JS -->
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css' rel='stylesheet' />
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js'></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Internal CSS -->
+    <style>
+        /* ------------------------- */
+        /* --- Global Styles & Reset --- */
+        /* ------------------------- */
+        :root {
+            --primary-color: #3498db; /* Blue */
+            --secondary-color: #2ecc71; /* Green */
+            --danger-color: #e74c3c; /* Red */
+            --warning-color: #f39c12; /* Yellow */
+            --info-color: #5dade2; /* Light Blue */
+            --light-bg: #f4f7f9;
+            --light-card-bg: #ffffff;
+            --light-text: #343a40;
+            --light-text-muted: #6c757d;
+            --light-border: #dee2e6;
+            --light-shadow: rgba(0, 0, 0, 0.08);
+            --light-input-bg: #ffffff;
+            --light-input-border: #ced4da;
+
+            --dark-bg: #2c3e50; /* Slightly lighter dark bg */
+            --dark-card-bg: #34495e; /* Slightly lighter dark card */
+            --dark-text: #ecf0f1;
+            --dark-text-muted: #bdc3c7;
+            --dark-border: #4a627a; /* Adjusted dark border */
+            --dark-shadow: rgba(0, 0, 0, 0.25); /* Slightly stronger dark shadow */
+            --dark-input-bg: #4a627a; /* Consistent dark input bg */
+            --dark-input-border: #5e7a97; /* Consistent dark input border */
+
+            --font-primary: 'Poppins', sans-serif;
+            --font-secondary: 'Roboto', sans-serif;
+            --text-base-size: 16px;
+            --text-scale-ratio: 1.2;
+            --shadow-sm: 0 1px 3px 0 var(--current-shadow, var(--light-shadow)), 0 1px 2px -1px var(--current-shadow, var(--light-shadow)); /* Refined shadow */
+            --shadow-md: 0 4px 6px -1px var(--current-shadow, var(--light-shadow)), 0 2px 4px -2px var(--current-shadow, var(--light-shadow)); /* Refined shadow */
+            --shadow-lg: 0 10px 15px -3px var(--current-shadow, var(--light-shadow)), 0 4px 6px -4px var(--current-shadow, var(--light-shadow)); /* Refined shadow */
+            --border-radius: 8px;
+            --transition-speed: 0.3s;
+            --transition-bezier: cubic-bezier(0.4, 0, 0.2, 1);
+
+            /* Default light mode */
+            --bg-color: var(--light-bg);
+            --card-bg-color: var(--light-card-bg);
+            --text-color: var(--light-text);
+            --text-muted-color: var(--light-text-muted);
+            --border-color: var(--light-border);
+            --input-bg-color: var(--light-input-bg);
+            --input-border-color: var(--light-input-border);
+            --current-shadow: var(--light-shadow);
+        }
+
+        body.dark-mode {
+            --bg-color: var(--dark-bg);
+            --card-bg-color: var(--dark-card-bg);
+            --text-color: var(--dark-text);
+            --text-muted-color: var(--dark-text-muted);
+            --border-color: var(--dark-border);
+            --input-bg-color: var(--dark-input-bg);
+            --input-border-color: var(--dark-input-border);
+            --current-shadow: var(--dark-shadow);
+            --primary-color: #5dade2; /* Lighter blue for dark mode */
+            --secondary-color: #58d68d; /* Lighter green */
+            --danger-color: #f1948a; /* Lighter red */
+            --warning-color: #f8c471; /* Lighter yellow */
+            --info-color: #85c1e9; /* Adjusted light blue */
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; font-size: var(--text-base-size); }
+        body { font-family: var(--font-secondary); background-color: var(--bg-color); color: var(--text-color); line-height: 1.6; transition: background-color var(--transition-speed) var(--transition-bezier), color var(--transition-speed) var(--transition-bezier); display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
+        body.large-text { --text-base-size: calc(16px * 1.2); }
+        body.large-text h1 { font-size: calc(2.5rem * var(--text-scale-ratio)); } /* ... other large text styles */
+        body.large-text p, body.large-text li, body.large-text button, body.large-text span, body.large-text a, body.large-text div, body.large-text label, body.large-text input, body.large-text select, body.large-text textarea, body.large-text legend { font-size: calc(1rem * var(--text-scale-ratio)); }
+        body.large-text { line-height: 1.7; }
+        h1, h2, h3, h4, h5, h6 { font-family: var(--font-primary); margin-bottom: 0.75em; font-weight: 600; line-height: 1.2; }
+        h1 { font-size: 2.5rem; } h2 { font-size: 2rem; } h3 { font-size: 1.75rem; } h4 { font-size: 1.5rem; } h5 { font-size: 1.25rem; } h6 { font-size: 1rem; }
+        p { margin-bottom: 1rem; }
+        a { color: var(--primary-color); text-decoration: none; transition: color var(--transition-speed) ease; }
+        a:hover { text-decoration: underline; filter: brightness(110%); }
+        body.dark-mode a:hover { filter: brightness(120%); }
+        ul, ol { margin-bottom: 1rem; padding-left: 1.5rem; }
+        img { max-width: 100%; height: auto; display: block; border-radius: var(--border-radius); } /* Added border radius to images */
+        button, .button-style { cursor: pointer; font-family: inherit; padding: 0.7em 1.4em; border-radius: var(--border-radius); border: 1px solid transparent; transition: all var(--transition-speed) var(--transition-bezier); font-weight: 500; font-size: 1rem; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 8px; line-height: 1; /* Ensure text aligns well with icon */ }
+        button:hover, .button-style:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+        button:active, .button-style:active { transform: translateY(0); box-shadow: none; }
+        button:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb, 52, 152, 219), 0.4); } /* Use focus-visible */
+        body { --primary-color-rgb: 52, 152, 219; } body.dark-mode { --primary-color-rgb: 93, 173, 226; }
+        .btn-primary { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .btn-secondary { background-color: var(--secondary-color); color: white; border-color: var(--secondary-color); }
+        .btn-danger { background-color: var(--danger-color); color: white; border-color: var(--danger-color); }
+        .btn-outline { background-color: transparent; color: var(--primary-color); border-color: var(--primary-color); }
+        .btn-outline:hover { background-color: rgba(var(--primary-color-rgb), 0.1); }
+        .container { width: 90%; max-width: 1200px; margin-left: auto; margin-right: auto; padding: 0 15px; }
+        .text-center { text-align: center; } .text-muted { color: var(--text-muted-color); }
+        .mt-1 { margin-top: 0.5rem; } .mt-2 { margin-top: 1rem; } .mt-3 { margin-top: 1.5rem; } .mt-4 { margin-top: 2rem; }
+        .mb-1 { margin-bottom: 0.5rem; } .mb-2 { margin-bottom: 1rem; } .mb-3 { margin-bottom: 1.5rem; } .mb-4 { margin-bottom: 2rem; }
+        .p-1 { padding: 0.5rem; } .p-2 { padding: 1rem; } .p-3 { padding: 1.5rem; } .p-4 { padding: 2rem; }
+        .d-flex { display: flex; } .justify-between { justify-content: space-between; } .align-center { align-items: center; } .w-full { width: 100%; }
+
+        /* --- Animations --- */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); } 70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
+        @keyframes pulse-intense { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 0px rgba(231, 76, 60, 0.9); } 50% { transform: scale(1.05); box-shadow: 0 0 0 8px rgba(231, 76, 60, 0); } } /* Pulse for emergency button */
+        .fade-in { animation: fadeIn 0.6s var(--transition-bezier) forwards; }
+        .slide-in-up { animation: slideInUp 0.6s var(--transition-bezier) forwards; opacity: 0; }
+        .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; } .delay-4 { animation-delay: 0.4s; }
+
+        /* --- Navbar Styles --- */
+        .navbar { background-color: var(--card-bg-color); box-shadow: var(--shadow-md); padding: 0.8rem 0; position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid var(--border-color); transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease; }
+        .navbar .container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; } /* Allow wrap */
+        .navbar-brand { font-family: var(--font-primary); font-size: 1.6rem; font-weight: 700; color: var(--primary-color); display: flex; align-items: center; transition: transform 0.2s ease; }
+        .navbar-brand:hover { transform: scale(1.03); text-decoration: none; }
+        .navbar-brand svg { width: 30px; height: 30px; margin-right: 10px; fill: currentColor; }
+        .nav-links { list-style: none; display: flex; align-items: center; margin: 0; padding: 0; flex-wrap: wrap; /* Allow wrap */ gap: 0.5rem 1.5rem; /* Spacing between items */ }
+        .nav-links li { margin-left: 0; /* Remove left margin, use gap */ }
+        .nav-links a, .nav-links button { color: var(--text-color); font-weight: 500; padding: 0.5rem 0.2rem; background: none; border: none; cursor: pointer; font-size: 1rem; position: relative; display: flex; align-items: center; }
+        .nav-links a::after, .nav-links button::after { content: ''; position: absolute; width: 0; height: 2px; bottom: -2px; left: 50%; transform: translateX(-50%); background-color: var(--primary-color); transition: width var(--transition-speed) ease; }
+        .nav-links a:hover, .nav-links button:hover { text-decoration: none; color: var(--primary-color); }
+        .nav-links a:hover::after, .nav-links button:hover::after { width: 100%; }
+        .nav-links .icon-button svg { width: 22px; height: 22px; margin-left: 5px; }
+        #language-switcher { padding: 0.4rem 0.8rem; border: 1px solid var(--border-color); background-color: var(--bg-color); color: var(--text-color); border-radius: var(--border-radius); font-size: 0.9rem; transition: border-color var(--transition-speed) ease, background-color var(--transition-speed) ease; }
+        #language-switcher:focus-visible { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.4); }
+
+        /* --- Emergency Button --- */
+        #emergency-button {
+            background-color: var(--danger-color);
+            color: white;
+            padding: 0.6em 1.2em;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            border: 1px solid var(--danger-color);
+            box-shadow: var(--shadow-sm);
+            animation: pulse-intense 2.5s infinite;
+            margin-left: 1rem; /* Space from other items */
+        }
+        #emergency-button svg {
+             width: 20px; height: 20px; margin-right: 8px;
+        }
+        #emergency-button:hover {
+            background-color: color-mix(in srgb, var(--danger-color) 90%, black); /* Darken on hover */
+            opacity: 1; /* Override default hover opacity */
+            animation-play-state: paused; /* Pause pulse on hover */
+        }
+        #emergency-button.sent {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            animation: none;
+            cursor: default;
+        }
+         #emergency-button.sent:hover { /* Keep green when hovered after sending */
+             background-color: var(--secondary-color);
+             opacity: 0.9;
+         }
+
+        /* --- Main Layout & View Switching --- */
+        .main-content { flex-grow: 1; display: flex; padding-top: 1rem; position: relative; overflow: hidden; }
+        .content-area { flex-grow: 1; padding: 1.5rem; transition: margin-right var(--transition-speed) ease; overflow-y: auto; position: relative; height: calc(100vh - 65px - 1rem); /* Adjust height considering navbar and padding */ }
+        #dashboard-sections, #personal-details-section, #news-feed-section { display: none; /* Hide all sections initially */ }
+        body:not(.show-details):not(.show-news) #dashboard-sections { display: block; animation: fadeIn 0.5s var(--transition-bezier); }
+        body.show-details #personal-details-section { display: block; animation: fadeIn 0.5s var(--transition-bezier); }
+        body.show-news #news-feed-section { display: block; animation: fadeIn 0.5s var(--transition-bezier); }
+
+        /* --- Sidebar Styles --- */
+        .sidebar { width: 320px; background-color: var(--card-bg-color); box-shadow: var(--shadow-lg); border-left: 1px solid var(--border-color); position: fixed; top: 65px; /* Match navbar height */ right: 0; bottom: 0; z-index: 900; display: flex; flex-direction: column; transition: transform var(--transition-speed) var(--transition-bezier), background-color var(--transition-speed) ease, border-color var(--transition-speed) ease; transform: translateX(0); overflow-y: auto; padding-bottom: 20px; }
+        .sidebar.collapsed { transform: translateX(100%); }
+        .sidebar-toggle-button { position: fixed; top: 80px; right: 15px; z-index: 1001; background-color: var(--primary-color); color: white; border: none; border-radius: 50%; width: 45px; height: 45px; display: none; /* Enabled via JS */ justify-content: center; align-items: center; box-shadow: var(--shadow-md); cursor: pointer; transition: background-color var(--transition-speed) ease, transform var(--transition-speed) ease; }
+        .sidebar-toggle-button:hover { filter: brightness(1.1); transform: scale(1.1); }
+        .sidebar-toggle-button svg { width: 22px; height: 22px; fill: white; }
+        .sidebar-content { padding: 1.5rem; flex-grow: 1; }
+        .user-info { text-align: center; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem; }
+        .user-info img { width: 90px; height: 90px; border-radius: 50%; margin: 0 auto 1rem; border: 4px solid var(--primary-color); box-shadow: var(--shadow-sm); }
+        .user-info h4 { margin-bottom: 0.2rem; font-weight: 600; font-size: 1.15rem; }
+        .user-info p { color: var(--text-muted-color); font-size: 0.9rem; margin-bottom: 0; }
+        .status-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; }
+        .status-buttons button { padding: 0.8rem 1rem; font-weight: 600; font-size: 0.95rem; }
+        .btn-safe { background-color: var(--secondary-color); color: white; border-color: var(--secondary-color); }
+        .btn-safe.confirmed { background-color: transparent; color: var(--secondary-color); border: 1px solid var(--secondary-color); cursor: default; box-shadow: none; opacity: 0.8; }
+        .btn-help { background-color: var(--danger-color); color: white; border-color: var(--danger-color); }
+        .btn-help.confirmed { background-color: transparent; color: var(--danger-color); border: 1px solid var(--danger-color); cursor: default; animation: pulse 1.5s infinite; box-shadow: none; opacity: 0.8;}
+        .quick-links h5 { font-weight: 600; margin-bottom: 1rem; color: var(--text-muted-color); text-transform: uppercase; font-size: 0.9rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
+        .quick-links ul { list-style: none; padding: 0; margin: 0; }
+        .quick-links li a { display: flex; align-items: center; padding: 0.85rem 0.75rem; border-radius: var(--border-radius); color: var(--text-color); margin-bottom: 0.5rem; transition: background-color var(--transition-speed) var(--transition-bezier), color var(--transition-speed) var(--transition-bezier), transform var(--transition-speed) var(--transition-bezier); font-weight: 500; }
+        .quick-links li a svg { width: 20px; height: 20px; margin-right: 12px; fill: currentColor; opacity: 0.8; transition: opacity var(--transition-speed) ease; }
+        .quick-links li a:hover { background-color: rgba(var(--primary-color-rgb), 0.1); color: var(--primary-color); text-decoration: none; transform: translateX(3px); }
+        .quick-links li a:hover svg { opacity: 1; }
+        body.dark-mode .quick-links li a:hover { background-color: rgba(255, 255, 255, 0.1); }
+
+        /* --- Map Styles --- */
+        #map-container { position: relative; height: 55vh; /* Adjusted height */ width: 100%; border-radius: var(--border-radius); overflow: hidden; box-shadow: var(--shadow-md); background-color: var(--border-color); margin-bottom: 2rem; border: 1px solid var(--border-color); /* Subtle border */ }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        /* Adjust control position slightly for 3D view */
+        .mapboxgl-ctrl-top-right { top: 10px; right: 10px; }
+        .mapboxgl-ctrl-top-left { top: 10px; left: 10px; }
+        .mapboxgl-ctrl-attrib { background-color: rgba(255, 255, 255, 0.7) !important; padding: 2px 8px !important; border-radius: 4px; font-size: 11px; }
+        body.dark-mode .mapboxgl-ctrl-attrib { background-color: rgba(0, 0, 0, 0.6) !important; }
+        body.dark-mode .mapboxgl-ctrl-attrib a { color: var(--dark-text-muted) !important; }
+        .user-marker { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30" height="30"><circle cx="12" cy="12" r="8" fill="%233498db" stroke="%23ffffff" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="%23ffffff"/></svg>'); background-size: cover; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; box-shadow: 0 0 0 5px rgba(52, 152, 219, 0.3); animation: pulse-marker 2s infinite; }
+        @keyframes pulse-marker { 0% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.5); } 70% { box-shadow: 0 0 0 10px rgba(52, 152, 219, 0); } 100% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0); } }
+        #map-loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; background: rgba(255, 255, 255, 0.9); padding: 1rem 1.5rem; border-radius: var(--border-radius); box-shadow: var(--shadow-md); color: var(--light-text); font-weight: 500; }
+        body.dark-mode #map-loading { background: rgba(52, 73, 94, 0.9); color: var(--dark-text); }
+
+        /* --- Disaster Risks --- */
+        #disaster-risks { margin-bottom: 2rem; }
+        #disaster-risks h3 { margin-bottom: 1.5rem; }
+        .risk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.5rem; }
+        .risk-card { background-color: var(--card-bg-color); padding: 1.5rem; border-radius: var(--border-radius); box-shadow: var(--shadow-sm); text-align: center; transition: transform var(--transition-speed) var(--transition-bezier), box-shadow var(--transition-speed) var(--transition-bezier); border-left: 5px solid transparent; display: flex; flex-direction: column; align-items: center; } /* Use flex */
+        .risk-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); }
+        .risk-card .icon { font-size: 2.8rem; margin-bottom: 1rem; line-height: 1; display: inline-block; }
+        .risk-card h4 { font-size: 1.1rem; margin-bottom: 0.5rem; font-weight: 600; }
+        .risk-percentage { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.2rem; line-height: 1; }
+        .risk-level { font-size: 0.9rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-top: auto; /* Push level to bottom */ }
+        .risk-card[data-risk-level="low"] { border-left-color: var(--secondary-color); } .risk-card[data-risk-level="low"] .risk-percentage, .risk-card[data-risk-level="low"] .risk-level { color: var(--secondary-color); }
+        .risk-card[data-risk-level="medium"] { border-left-color: var(--warning-color); } .risk-card[data-risk-level="medium"] .risk-percentage, .risk-card[data-risk-level="medium"] .risk-level { color: var(--warning-color); }
+        .risk-card[data-risk-level="high"] { border-left-color: var(--danger-color); } .risk-card[data-risk-level="high"] .risk-percentage, .risk-card[data-risk-level="high"] .risk-level { color: var(--danger-color); }
+
+        /* --- Timeline Alerts --- */
+        #timeline-alerts { margin-bottom: 2rem; }
+        #timeline-alerts h3 { margin-bottom: 1.5rem; }
+        .alert-list { list-style: none; padding: 0; margin: 0; max-height: 400px; overflow-y: auto; /* Add scrollbar styling */ scrollbar-width: thin; scrollbar-color: var(--primary-color) var(--border-color); }
+        .alert-list::-webkit-scrollbar { width: 8px; }
+        .alert-list::-webkit-scrollbar-track { background: var(--border-color); border-radius: 4px;}
+        .alert-list::-webkit-scrollbar-thumb { background-color: var(--primary-color); border-radius: 4px; border: 2px solid var(--border-color); }
+        .alert-item { background-color: var(--card-bg-color); padding: 1rem 1.5rem; border-radius: var(--border-radius); box-shadow: var(--shadow-sm); margin-bottom: 1rem; display: flex; align-items: center; gap: 1.5rem; border-left: 5px solid var(--info-color); opacity: 0; transform: translateX(-20px); animation: slideInAlert 0.5s ease-out forwards; }
+        .alert-item:last-child { margin-bottom: 0; }
+        @keyframes slideInAlert { to { opacity: 1; transform: translateX(0); } }
+        .alert-item .icon { font-size: 2rem; flex-shrink: 0; width: 45px; text-align: center; line-height: 1; }
+        .alert-item .content p { margin-bottom: 0.25rem; font-weight: 500; }
+        .alert-item .content .time { font-size: 0.9rem; color: var(--text-muted-color); font-weight: 400; }
+        .alert-item .content .location { font-size: 0.9rem; color: var(--text-muted-color); font-style: italic; }
+        .alert-item.alert-flood { border-left-color: var(--primary-color); color: var(--primary-color); }
+        .alert-item.alert-earthquake { border-left-color: #a04000; color: #a04000; } body.dark-mode .alert-item.alert-earthquake { border-left-color: #e59866; color: #e59866; }
+        .alert-item.alert-wildfire { border-left-color: var(--danger-color); color: var(--danger-color); }
+        .alert-item.alert-storm { border-left-color: #5499c7; color: #5499c7; } body.dark-mode .alert-item.alert-storm { border-left-color: #aed6f1; color: #aed6f1; }
+        .alert-item.alert-info { border-left-color: var(--info-color); color: var(--info-color); }
+        #voice-alert-button { background: none; border: none; padding: 0; cursor: pointer; color: var(--text-muted-color); transition: color var(--transition-speed) ease, transform var(--transition-speed) ease; }
+        #voice-alert-button:hover { color: var(--primary-color); transform: scale(1.1); }
+        #voice-alert-button svg { width: 24px; height: 24px; vertical-align: middle; }
+        #voice-alert-button.active svg { fill: var(--primary-color); }
+
+        /* --- Gamification --- */
+        #gamification-section { background-color: var(--card-bg-color); padding: 1.5rem; border-radius: var(--border-radius); box-shadow: var(--shadow-sm); margin-top: 2rem; }
+        #gamification-section h4 { margin-bottom: 1rem; }
+        .badge-list { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+        .badge { text-align: center; opacity: 0.4; transition: opacity var(--transition-speed) ease, transform var(--transition-speed) var(--transition-bezier); transform: scale(0.95); }
+        .badge.unlocked { opacity: 1; transform: scale(1.05); }
+        .badge img { width: 65px; height: 65px; margin-bottom: 0.5rem; filter: grayscale(80%); transition: filter var(--transition-speed) ease, transform 0.2s ease; }
+        .badge.unlocked img { filter: grayscale(0%); }
+        .badge:hover img { transform: scale(1.1); } /* Add hover effect */
+        .badge span { display: block; font-size: 0.85rem; color: var(--text-muted-color); font-weight: 500; }
+        .badge.unlocked span { color: var(--text-color); }
+        .badge-notification { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(120px); background-color: var(--secondary-color); color: white; padding: 1rem 1.5rem; border-radius: var(--border-radius); box-shadow: var(--shadow-lg); z-index: 2000; opacity: 0; transition: transform 0.5s var(--transition-bezier), opacity 0.5s ease-out, background-color var(--transition-speed) ease; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .badge-notification.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .badge-notification svg { width: 24px; height: 24px; fill: white; }
+        .badge-notification.success { background-color: var(--secondary-color); } .badge-notification.danger { background-color: var(--danger-color); }
+        .badge-notification.info { background-color: var(--info-color); } .badge-notification.warning { background-color: var(--warning-color); color: #333; }
+        .badge-notification.warning svg { fill: #333; }
+
+        /* --- Accessibility Controls --- */
+        .accessibility-controls { display: flex; align-items: center; gap: 1rem; }
+        .toggle-switch { display: flex; align-items: center; cursor: pointer; background: none; border: none; padding: 0; color: var(--text-muted-color); transition: color var(--transition-speed) ease, transform var(--transition-speed) ease; }
+        .toggle-switch svg { width: 22px; height: 22px; margin-right: 5px; fill: currentColor; }
+        .toggle-switch span { font-size: 0.9rem; font-weight: 500; }
+        .toggle-switch:hover { color: var(--primary-color); transform: scale(1.05); }
+
+        /* --- Personal Details Form --- */
+        #personal-details-section { background-color: var(--card-bg-color); padding: 2rem; border-radius: var(--border-radius); box-shadow: var(--shadow-md); margin-top: 1rem; }
+        #details-form fieldset { border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 1.5rem; margin-bottom: 2rem; background-color: rgba(var(--primary-color-rgb), 0.02); transition: background-color 0.3s ease; }
+        body.dark-mode #details-form fieldset { background-color: rgba(0, 0, 0, 0.15); }
+        #details-form legend { font-family: var(--font-primary); font-weight: 600; font-size: 1.25rem; padding: 0 0.8rem; color: var(--primary-color); margin-left: 0.5rem; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
+        .form-group { margin-bottom: 1rem; display: flex; flex-direction: column; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.95rem; color: var(--text-muted-color); }
+        .form-group label.required::after { content: ' *'; color: var(--danger-color); }
+        .form-group input[type="text"], .form-group input[type="email"], .form-group input[type="tel"], .form-group input[type="date"], .form-group input[type="number"], .form-group select, .form-group textarea { width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--input-border-color); border-radius: var(--border-radius); background-color: var(--input-bg-color); color: var(--text-color); font-size: 1rem; transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease; line-height: 1.5; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.3); }
+        .form-group textarea { min-height: 100px; resize: vertical; }
+        .form-actions { display: flex; justify-content: flex-end; /* Align button to right */ align-items: center; margin-top: 2rem; gap: 1rem; flex-wrap: wrap; }
+        .form-actions button { min-width: 150px; }
+
+        /* --- News Feed Styles --- */
+        #news-feed-section { padding: 1.5rem 0; }
+        #news-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
+        .news-card { background-color: var(--card-bg-color); border-radius: var(--border-radius); box-shadow: var(--shadow-sm); overflow: hidden; display: flex; flex-direction: column; transition: transform var(--transition-speed) var(--transition-bezier), box-shadow var(--transition-speed) var(--transition-bezier); border: 1px solid var(--border-color); } /* Added border */
+        .news-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); }
+        .news-card a { text-decoration: none; color: inherit; display: flex; flex-direction: column; height: 100%; }
+        .news-card a:hover { text-decoration: none; }
+        .news-image { width: 100%; height: 180px; object-fit: cover; background-color: var(--border-color); border-bottom: 1px solid var(--border-color); }
+        .news-image[src=""] { display: none; }
+        .news-content { padding: 1rem 1.2rem; flex-grow: 1; display: flex; flex-direction: column; }
+        .news-title { font-family: var(--font-primary); font-size: 1.15rem; font-weight: 600; line-height: 1.3; margin-bottom: 0.5rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
+        .news-card a:hover .news-title { color: var(--primary-color); }
+        .news-description { font-size: 0.95rem; line-height: 1.5; color: var(--text-muted-color); margin-bottom: 1rem; flex-grow: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
+        .news-meta { font-size: 0.85rem; color: var(--text-muted-color); border-top: 1px solid var(--border-color); padding-top: 0.75rem; margin-top: auto; display: flex; justify-content: space-between; align-items: center; }
+        .news-source { font-weight: 500; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 60%; }
+        .news-time { white-space: nowrap; }
+        #news-loading-error { text-align: center; padding: 2rem; color: var(--text-muted-color); font-size: 1.1rem; }
+
+        /* --- Responsiveness --- */
+        @media (max-width: 992px) {
+            .sidebar { transform: translateX(100%); width: 300px; box-shadow: -5px 0 15px rgba(0,0,0,0.1); border-left: none; }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar-toggle-button { display: flex; }
+            .content-area { margin-right: 0; padding: 1rem; height: calc(100vh - 60px - 1rem); /* Adjust height */ }
+            .main-content { padding-top: 0.5rem; }
+            #map-container { height: 45vh; }
+            .risk-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; }
+            .risk-card { padding: 1rem; }
+            .alert-item { gap: 1rem; padding: 0.8rem 1rem; }
+            .accessibility-controls { gap: 0.8rem; }
+            .navbar .container { padding: 0 1rem; }
+             .navbar .nav-links { justify-content: flex-end; /* Align controls right on wrap */ }
+             #emergency-button { margin-left: 0.5rem; }
+            .badge-list { gap: 1rem; } .badge img { width: 55px; height: 55px; }
+            #personal-details-section { padding: 1.5rem; }
+            .form-grid { grid-template-columns: 1fr; gap: 1rem; }
+             #news-list { grid-template-columns: 1fr; /* Stack news cards */ }
+        }
+
+        @media (max-width: 768px) {
+            html { font-size: 15px; }
+            body.large-text { --text-base-size: calc(15px * 1.2); }
+            h1 { font-size: 2rem; } h2 { font-size: 1.75rem; } h3 { font-size: 1.5rem; }
+            .navbar-brand { font-size: 1.4rem; } .navbar-brand svg { width: 26px; height: 26px; }
+            .nav-links { gap: 0.5rem 1rem; /* Adjust gap */ }
+            .status-buttons { grid-template-columns: 1fr; }
+            .sidebar { width: 280px; }
+            #map-container { height: 40vh; }
+            .risk-grid { grid-template-columns: 1fr 1fr; }
+            .alert-item { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+            .alert-item .icon { margin-bottom: 0.5rem; font-size: 1.8rem; width: auto; }
+            #personal-details-section { padding: 1rem; } #details-form fieldset { padding: 1rem; } #details-form legend { font-size: 1.15rem; }
+            .form-actions { flex-direction: column; align-items: stretch; } .form-actions button { width: 100%; }
+            .news-image { height: 160px; } .news-title { font-size: 1.1rem; } .news-description { font-size: 0.9rem; }
+            .content-area { height: calc(100vh - 56px - 1rem); /* Adjust height */ }
+            #emergency-button { padding: 0.5em 1em; font-size: 0.9rem; }
+        }
+
+        @media (max-width: 576px) {
+            .container { width: 100%; padding: 0 0.8rem; }
+            .navbar .container { padding: 0 0.8rem; }
+            .accessibility-controls { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+            .nav-links { display: none; /* Hide nav links, but keep emergency button logic? Maybe move it? For now, hide all.*/ }
+             /* Show emergency button even if links are hidden? Need JS logic change or different placement */
+             /* Let's keep nav-links visible, but allow wrapping */
+             .nav-links { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem; }
+             .nav-links li { margin-left: 0; }
+             #emergency-button { /* Ensure it's visible */ order: 10; /* Put it last if needed */ margin-left: 0.5rem; }
+
+            #language-switcher { margin-left: 0; margin-top: 5px;}
+            .content-area { padding: 0.8rem; height: calc(100vh - 70px - 1rem); /* Adjust height for potential wrap */ }
+            .risk-grid { grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+            .risk-card { padding: 0.8rem; } .risk-card .icon { font-size: 2rem; } .risk-percentage { font-size: 1.8rem; }
+            .sidebar { width: 90%; }
+            .user-info img { width: 70px; height: 70px; }
+            .badge-list { justify-content: center; } .badge img { width: 50px; height: 50px; }
+            .form-group input, .form-group select, .form-group textarea { padding: 0.65rem 0.9rem; font-size: 0.95rem; }
+             .news-image { height: 140px; } .news-title { font-size: 1rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <header class="navbar">
+        <div class="container">
+            <a href="#" class="navbar-brand" data-translate-key="appTitle" id="brand-link">
+                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                AuraAlert
+            </a>
+            <nav>
+                <ul class="nav-links">
+                    <li class="accessibility-controls">
+                         <button id="theme-toggle" class="toggle-switch" title="Toggle dark/light mode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></button>
+                         <button id="text-size-toggle" class="toggle-switch" title="Toggle large text mode"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M2.5 4v3h5v12h3V7h5V4h-13zm19 5h-9v3h3v7h3v-7h3V9z"/></svg></button>
+                    </li>
+                    <li>
+                         <select id="language-switcher" title="Select language">
+                            <option value="en">English</option>
+                            <option value="hi">हिन्दी (Hindi)</option>
+                         </select>
+                    </li>
+                     <li> <!-- Emergency Button Added Here -->
+                          <button id="emergency-button" class="button-style" title="Send Emergency Alert with Location">
+                               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                               <span data-translate-key="emergencyBtn">Emergency</span>
+                          </button>
+                     </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <main class="content-area">
+
+            <!-- Wrapper for Dashboard Elements -->
+            <div id="dashboard-sections">
+                <div id="dashboard-header">
+                     <h2 data-translate-key="dashboardTitle">Your Local Safety Dashboard</h2>
+                     <p class="text-muted mb-3" data-translate-key="dashboardSubtitle">Real-time 3D map, risks, alerts, and news for your current location.</p>
+                </div>
+                <section id="map-section" class="mb-3">
+                    <div id="map-container"><div id="map"></div><div id="map-loading" data-translate-key="mapLoading">Loading map...</div></div>
+                </section>
+                <section id="disaster-risks" class="mb-3">
+                    <h3 data-translate-key="currentRisks">Current Risk Assessment</h3>
+                    <div class="risk-grid"><!-- Risk cards populated by JS --></div>
+                </section>
+                <section id="timeline-alerts" class="mb-3">
+                    <div class="d-flex justify-between align-center mb-2">
+                         <h3 class="mb-0" data-translate-key="timelineAlerts">Timeline Alerts</h3>
+                         <button id="voice-alert-button" title="Toggle Voice Alerts"><!-- SVG Icons --></button>
+                    </div>
+                    <ul class="alert-list"><!-- Alert items populated by JS --></ul>
+                </section>
+                <section id="gamification-section">
+                    <h4 data-translate-key="yourBadges">Your Badges</h4>
+                    <div id="badge-list" class="badge-list"><!-- Badges populated by JS --></div>
+                </section>
+            </div>
+
+            <!-- Personal Details Section (Initially Hidden) -->
+            <section id="personal-details-section">
+                <div class="d-flex justify-between align-center mb-3">
+                    <h2 data-translate-key="personalDetailsTitle">Personal & Emergency Details</h2>
+                    <button id="back-to-dashboard-button-details" class="btn-outline back-button" type="button"><svg><!-- Back icon --></svg> <span data-translate-key="backToDashboard">Back</span></button>
+                </div>
+                <p class="text-muted mb-4" data-translate-key="personalDetailsSubtitle">This information is stored locally in your browser for privacy.</p>
+                <form id="details-form"><!-- Form fields --></form>
+            </section>
+
+             <!-- News Feed Section (Initially Hidden) -->
+             <section id="news-feed-section">
+                 <div class="d-flex justify-between align-center mb-3">
+                      <h2 data-translate-key="newsFeedTitle">Latest News Feed</h2>
+                      <button id="back-to-dashboard-button-news" class="btn-outline back-button" type="button">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                          <span data-translate-key="backToDashboard">Back</span>
+                      </button>
+                 </div>
+                  <p class="text-muted mb-3" data-translate-key="newsFeedSubtitle">Relevant news based on your location or general safety topics.</p>
+                 <div id="news-list-container">
+                     <div id="news-list">
+                         <!-- News cards will be populated here -->
+                         <div id="news-loading-error" data-translate-key="loadingNews">Loading news...</div>
+                     </div>
+                 </div>
+             </section>
+
+        </main>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar"><!-- Sidebar content (User info, Status buttons, Quick Links) --></aside>
+        <button class="sidebar-toggle-button" id="sidebar-toggle" aria-label="Toggle Sidebar"><!-- Toggle icon --></button>
+    </div>
+
+    <!-- Badge Notification Popup -->
+    <div id="badge-notification" class="badge-notification"><svg><!-- Icon --></svg> <span id="badge-notification-text"></span></div>
+
+    <!-- Fill in the missing SVG/HTML snippets -->
+    <script>
+         // Pre-fill common elements
+         document.getElementById('voice-alert-button').innerHTML = `<svg id="voice-on-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg><svg id="voice-off-icon" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zm-1.59 4.91l-1.41-1.41c-.61.39-1.28.68-2 .88v2.06c1.19-.27 2.27-.78 3.22-1.45zM12 4L7 9H3v6h4l5 5v-6.59l-5.18-5.18L12 4zM4.27 3L3 4.27 7.73 9H3v6h4.73L12 19.73V14.5l6.27 6.27c-.68.4-1.4.71-2.17.93v2.06c1.54-.29 2.96-.88 4.22-1.69L21 22.73 20.73 21l-9-9L4.27 3z"/></svg>`;
+         document.getElementById('sidebar-toggle').innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>`;
+         document.getElementById('badge-notification').children[0].outerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>`; // Changed icon
+         document.getElementById('badge-list').innerHTML = `
+             <div class="badge" id="badge-prepared" data-badge-id="prepared"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cccccc'><path d='M12 2L4.5 5v6.09c0 5.05 3.41 9.76 7.5 10.91 4.09-1.15 7.5-5.86 7.5-10.91V5L12 2zm-1.06 15.4L7.4 14.06l1.41-1.41 2.12 2.12 4.24-4.24 1.41 1.41L10.94 17.4z'/></svg>" alt="Prepared Badge"><span data-translate-key="badgePrepared">Prepared Hero</span></div>
+             <div class="badge" id="badge-safe" data-badge-id="safe"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cccccc'><path d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z' stroke='%23aaaaaa' stroke-width='0.5'/><path fill='none' d='M0 0h24v24H0z'/></svg>" alt="I'm Safe Badge"><span data-translate-key="badgeSafe">Safety Confirmed</span></div>
+             <div class="badge" id="badge-informed" data-badge-id="informed"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cccccc'><path d='M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z'/></svg>" alt="Informed Badge"><span data-translate-key="badgeInformed">Informed Citizen</span></div>
+             <div class="badge" id="badge-details" data-badge-id="details"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cccccc'><path d='M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 14h-3v3h-2v-3H8v-2h3v-3h2v3h3v2zm-3-7V3.5L18.5 9H13z'/><path fill='none' d='M0 0h24v24H0z'/></svg>" alt="Details Complete Badge"><span data-translate-key="badgeDetails">Profile Complete</span></div>`;
+         document.getElementById('sidebar').innerHTML = `
+            <div class="sidebar-content">
+                <div class="user-info"> <img id="user-avatar" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23bdc3c7'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>" alt="User Avatar"><h4 id="user-name" data-translate-key="loadingUser">...</h4><p id="user-location" data-translate-key="unknownLocation">...</p></div>
+                <div class="status-buttons"><button id="safe-button" class="button-style btn-safe"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg><span data-translate-key="imSafe">I'm Safe</span></button><button id="help-button" class="button-style btn-help"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12 5.99L19.53 19H4.47L12 5.99M12 2L1 21h22L12 2zm1 14h-2v2h2v-2zm0-6h-2v4h2v-4z"/></svg><span data-translate-key="needHelp">Need Help</span></button></div>
+                <div class="quick-links"><h5 data-translate-key="quickAccess">Quick Access</h5><ul>
+                    <li><a href="#details" id="link-details"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><span data-translate-key="personalDetailsLink">Personal Details</span></a></li>
+                    <li><a href="#news-feed" id="link-news"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/></svg><span data-translate-key="newsFeed">News Feed</span></a></li>
+                    <li><a href="#safe-route" id="link-safe-route"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M21.71 11.29l-9-9a.996.996 0 00-1.41 0l-9 9a.996.996 0 000 1.41l9 9c.39.39 1.02.39 1.41 0l9-9a.996.996 0 000-1.41zM14 14.5V12h-4v3H8v-4c0-.55.45-1 1-1h5V7.5l3.5 3.5-3.5 3.5z"/></svg><span data-translate-key="nearestSafePlace">Nearest Safe Place</span></a></li>
+                    <li><a href="#history" id="link-history"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.25 2.52.77-1.28-3.52-2.09V8H12z"/></svg><span data-translate-key="alertHistory">Alert History</span></a></li>
+                    <li><a href="#preparedness" id="link-preparedness"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 2L4.5 5v6.09c0 5.05 3.41 9.76 7.5 10.91 4.09-1.15 7.5-5.86 7.5-10.91V5L12 2zm-1.06 15.4L7.4 14.06l1.41-1.41 2.12 2.12 4.24-4.24 1.41 1.41L10.94 17.4z"/></svg><span data-translate-key="preparednessTips">Preparedness Tips</span></a></li>
+                </ul></div>
+            </div>`;
+          document.getElementById('details-form').innerHTML = `<fieldset><legend data-translate-key="personalInfoLegend">Personal Info</legend><div class="form-grid"><div class="form-group"><label for="fullName" class="required" data-translate-key="labelFullName">Full Name</label><input type="text" id="fullName" name="fullName" required></div><div class="form-group"><label for="dob" data-translate-key="labelDob">Date of Birth</label><input type="date" id="dob" name="dob"></div><div class="form-group"><label for="phone" data-translate-key="labelPhone">Phone</label><input type="tel" id="phone" name="phone"></div><div class="form-group"><label for="email" data-translate-key="labelEmail">Email</label><input type="email" id="email" name="email"></div><div class="form-group"><label for="address" data-translate-key="labelAddress">Address</label><textarea id="address" name="address" rows="3"></textarea></div></div></fieldset><fieldset><legend data-translate-key="medicalInfoLegend">Medical Details</legend><div class="form-grid"><div class="form-group"><label for="bloodType" data-translate-key="labelBloodType">Blood Type</label><select id="bloodType" name="bloodType"><option value="" data-translate-key="selectOption">-- Select --</option><option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="AB+">AB+</option><option value="AB-">AB-</option><option value="O+">O+</option><option value="O-">O-</option><option value="Unknown">Unknown</option></select></div><div class="form-group"><label for="allergies" data-translate-key="labelAllergies">Allergies</label><textarea id="allergies" name="allergies" rows="3"></textarea></div><div class="form-group"><label for="medications" data-translate-key="labelMedications">Medications</label><textarea id="medications" name="medications" rows="3"></textarea></div><div class="form-group"><label for="conditions" data-translate-key="labelConditions">Conditions</label><textarea id="conditions" name="conditions" rows="3"></textarea></div><div class="form-group"><label for="physicianName" data-translate-key="labelPhysicianName">Physician</label><input type="text" id="physicianName" name="physicianName"></div><div class="form-group"><label for="physicianPhone" data-translate-key="labelPhysicianPhone">Physician Phone</label><input type="tel" id="physicianPhone" name="physicianPhone"></div></div></fieldset><fieldset><legend data-translate-key="emergencyContactsLegend">Emergency Contacts</legend><div class="form-grid"><div class="form-group"><label for="emergencyContact1Name" class="required" data-translate-key="labelContact1Name">Contact 1 Name</label><input type="text" id="emergencyContact1Name" name="emergencyContact1Name" required></div><div class="form-group"><label for="emergencyContact1Phone" class="required" data-translate-key="labelContact1Phone">Contact 1 Phone</label><input type="tel" id="emergencyContact1Phone" name="emergencyContact1Phone" required></div><div class="form-group"><label for="emergencyContact1Relation" data-translate-key="labelContact1Relation">Contact 1 Relation</label><input type="text" id="emergencyContact1Relation" name="emergencyContact1Relation"></div><div class="form-group"><label for="emergencyContact2Name" data-translate-key="labelContact2Name">Contact 2 Name</label><input type="text" id="emergencyContact2Name" name="emergencyContact2Name"></div><div class="form-group"><label for="emergencyContact2Phone" data-translate-key="labelContact2Phone">Contact 2 Phone</label><input type="tel" id="emergencyContact2Phone" name="emergencyContact2Phone"></div><div class="form-group"><label for="emergencyContact2Relation" data-translate-key="labelContact2Relation">Contact 2 Relation</label><input type="text" id="emergencyContact2Relation" name="emergencyContact2Relation"></div></div></fieldset><div class="form-actions"><button type="submit" class="button-style btn-primary"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg><span data-translate-key="saveDetailsButton">Save</span></button></div>`;
+         document.getElementById('back-to-dashboard-button-details').children[0].outerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>`;
+    </script>
+
+    <!-- Internal JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- Global Variables & DOM Elements ---
+            const body = document.body;
+            const mapElement = document.getElementById('map');
+            const mapLoadingElement = document.getElementById('map-loading');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const contentArea = document.querySelector('.content-area');
+            const themeToggle = document.getElementById('theme-toggle');
+            const textSizeToggle = document.getElementById('text-size-toggle');
+            const languageSwitcher = document.getElementById('language-switcher');
+            const emergencyButton = document.getElementById('emergency-button'); // New Emergency Button
+            const userAvatar = document.getElementById('user-avatar');
+            const userName = document.getElementById('user-name');
+            const userLocation = document.getElementById('user-location');
+            const safeButton = document.getElementById('safe-button');
+            const helpButton = document.getElementById('help-button');
+            const riskGrid = document.querySelector('.risk-grid');
+            const alertList = document.querySelector('.alert-list');
+            const voiceAlertButton = document.getElementById('voice-alert-button');
+            const voiceOnIcon = document.getElementById('voice-on-icon');
+            const voiceOffIcon = document.getElementById('voice-off-icon');
+            const badgeList = document.getElementById('badge-list');
+            const badgeNotification = document.getElementById('badge-notification');
+            const badgeNotificationText = document.getElementById('badge-notification-text');
+            const quickLinks = document.querySelectorAll('.quick-links a');
+            const brandLink = document.getElementById('brand-link');
+            const dashboardSections = document.getElementById('dashboard-sections');
+
+            // Page Specific Elements
+            const detailsLink = document.getElementById('link-details');
+            const detailsSection = document.getElementById('personal-details-section');
+            const detailsForm = document.getElementById('details-form');
+            const backToDashboardButtonDetails = document.getElementById('back-to-dashboard-button-details');
+
+            const newsLink = document.getElementById('link-news');
+            const newsFeedSection = document.getElementById('news-feed-section');
+            const newsListContainer = document.getElementById('news-list');
+            const newsLoadingErrorElement = document.getElementById('news-loading-error');
+            const backToDashboardButtonNews = document.getElementById('back-to-dashboard-button-news');
+
+            const safeRouteLink = document.getElementById('link-safe-route'); // New Safe Route Link
+
+            // --- Configuration ---
+            mapboxgl.accessToken = 'pk.eyJ1IjoiYWJoaXNoZWstc2hhcm1hLTA3IiwiYSI6ImNseGc0ZTVraTJmdWEyaW51ZmoxcHk0NGgifQ.gT-y964q6C-zCqM-jHw1Vw'; // Use your actual Mapbox token
+            const NEWS_API_KEY = '2560464518d943579556c88ac35e640f'; // Use your actual NewsAPI key
+            const NEWS_API_URL = 'https://newsapi.org/v2/everything';
+
+             // Mock Safe Places (Replace with real data source if available)
+             const mockSafePlaces = [
+                 { name: "Community Center", lat: 0, lng: 0 }, // Will be updated relative to user
+                 { name: "Public Library", lat: 0, lng: 0 },
+                 { name: "Town Hall Shelter", lat: 0, lng: 0 },
+                 { name: "North Park Evacuation Point", lat: 0, lng: 0}
+             ];
+
+            // --- State Variables ---
+            let map;
+            let userMarker;
+            let currentCoords = null; // [longitude, latitude]
+            let currentUserCity = null;
+            let currentLanguage = localStorage.getItem('language') || 'en';
+            let isDarkMode = localStorage.getItem('theme') === 'dark';
+            let isLargeText = localStorage.getItem('textSize') === 'large';
+            let areVoiceAlertsEnabled = localStorage.getItem('voiceAlerts') === 'enabled';
+            let unlockedBadges = JSON.parse(localStorage.getItem('unlockedBadges') || '[]');
+            let simulatedEvacRouteLayerId = 'simulated-evac-route';
+            let riskHeatmapLayerId = 'risk-heatmap';
+            let riskPointsSourceId = 'risk-points';
+            let newsCache = {};
+            let isEmergencySent = false; // State for emergency button
+
+             // --- Translation Data (English & Hindi) ---
+             const translations = {
+                 en: {
+                     appTitle: "AuraAlert", dashboardTitle: "Your Local Safety Dashboard", dashboardSubtitle: "Real-time 3D map, risks, alerts, and news for your current location.",
+                     mapLoading: "Loading map & location...", currentRisks: "Current Risk Assessment", loadingData: "Loading...", checking: "Checking",
+                     timelineAlerts: "Timeline Alerts", checkingAlerts: "Checking for alerts...", yourBadges: "Your Badges",
+                     badgePrepared: "Prepared Hero", badgeSafe: "Safety Confirmed", badgeInformed: "Informed Citizen", badgeDetails: "Profile Complete",
+                     loadingUser: "Loading User...", unknownLocation: "Unknown Location", imSafe: "I'm Safe", needHelp: "Need Help",
+                     quickAccess: "Quick Access", personalDetailsLink: "Personal Details", newsFeed: "News Feed", alertHistory: "Alert History", preparednessTips: "Preparedness Tips", nearestSafePlace: "Nearest Safe Place",
+                     floodRisk: "Flood Risk", earthquakeRisk: "Earthquake Risk", wildfireRisk: "Wildfire Risk", stormRisk: "Storm Risk",
+                     lowRisk: "Low", mediumRisk: "Medium", highRisk: "High",
+                     floodAlert: "Flood Warning", earthquakeAlert: "Earthquake Detected", wildfireAlert: "Wildfire Alert", stormAlert: "Severe Storm Watch", infoAlert: "Information Update",
+                     eta: "ETA", hours: "hrs", minutes: "mins", near: "near", now: "Now", epicenterNear: "Epicenter near",
+                     markedSafe: "Marked as Safe", requestSent: "Help Request Sent",
+                     geoError: "Could not get location.", fetchError: "Could not fetch data.", mapError: "Map failed to load.", newsApiError: "Could not fetch news.", newsApiKeyMissing: "News API Key missing or invalid!",
+                     badgeUnlocked: "Badge Unlocked!",
+                     voiceAlertOn: "Voice alerts enabled", voiceAlertOff: "Voice alerts disabled", alertTrigger: "Alert!",
+                     toggleTheme: "Theme", toggleTextSize: "Text Size",
+                     personalDetailsTitle: "Personal & Emergency Details", personalDetailsSubtitle: "This information is stored locally in your browser for privacy.", backToDashboard: "Back",
+                     personalInfoLegend: "Personal Info", labelFullName: "Full Name", labelDob: "Date of Birth", labelPhone: "Phone", labelEmail: "Email", labelAddress: "Address",
+                     medicalInfoLegend: "Medical Details", labelBloodType: "Blood Type", selectOption: "-- Select --", labelAllergies: "Allergies", labelMedications: "Medications", labelConditions: "Conditions", labelPhysicianName: "Physician", labelPhysicianPhone: "Physician Phone",
+                     emergencyContactsLegend: "Emergency Contacts", labelContact1Name: "Contact 1 Name", labelContact1Phone: "Contact 1 Phone", labelContact1Relation: "Contact 1 Relation", labelContact2Name: "Contact 2 Name", labelContact2Phone: "Contact 2 Phone", labelContact2Relation: "Contact 2 Relation",
+                     saveDetailsButton: "Save Details", detailsSavedSuccess: "Details saved!", detailsSavedError: "Could not save details.",
+                     noActiveAlerts: "No active alerts for your area.",
+                     newsFeedTitle: "Latest News Feed", newsFeedSubtitle: "Relevant news based on your location or general safety topics.", loadingNews: "Loading news...", noNewsFound: "No relevant news articles found.", newsSource: "Source:", newsApiFail: "Failed to load news. Please check connection or API key.",
+                     emergencyBtn: "Emergency", emergencySent: "Alert Sent!", emergencyConfirm: "Emergency alert with location sent (simulated).", emergencyWait: "Please wait for location...",
+                     findingSafePlace: "Finding nearest safe place...", safePlaceRouteFound: "Opening route to {placeName} in Google Maps.", noSafePlace: "Could not determine route. Location unavailable?",
+                 },
+                 hi: {
+                     appTitle: "औराअलर्ट", dashboardTitle: "आपका स्थानीय सुरक्षा डैशबोर्ड", dashboardSubtitle: "वास्तविक समय का 3D नक्शा, जोखिम, अलर्ट और समाचार।",
+                     mapLoading: "नक्शा और स्थान लोड हो रहा है...", currentRisks: "वर्तमान जोखिम मूल्यांकन", loadingData: "लोड हो रहा है...", checking: "जाँच हो रही है",
+                     timelineAlerts: "समयरेखा अलर्ट", checkingAlerts: "अलर्ट की जाँच...", yourBadges: "आपके बैज",
+                     badgePrepared: "तैयार हीरो", badgeSafe: "सुरक्षा पुष्टि", badgeInformed: "सूचित नागरिक", badgeDetails: "प्रोफ़ाइल पूर्ण",
+                     loadingUser: "उपयोगकर्ता लोड...", unknownLocation: "अज्ञात स्थान", imSafe: "मैं सुरक्षित हूँ", needHelp: "मदद चाहिए",
+                     quickAccess: "त्वरित ऐक्सेस", personalDetailsLink: "व्यक्तिगत विवरण", newsFeed: "समाचार फ़ीड", alertHistory: "अलर्ट इतिहास", preparednessTips: "तैयारी युक्तियाँ", nearestSafePlace: "निकटतम सुरक्षित स्थान",
+                     floodRisk: "बाढ़ खतरा", earthquakeRisk: "भूकंप खतरा", wildfireRisk: "जंगल की आग खतरा", stormRisk: "तूफान खतरा",
+                     lowRisk: "कम", mediumRisk: "मध्यम", highRisk: "उच्च",
+                     floodAlert: "बाढ़ चेतावनी", earthquakeAlert: "भूकंप पता चला", wildfireAlert: "आग चेतावनी", stormAlert: "तूफान निगरानी", infoAlert: "सूचना अपडेट",
+                     eta: "ETA", hours: "घंटे", minutes: "मिनट", near: "पास", now: "अभी", epicenterNear: "उपरिकेंद्र पास",
+                     markedSafe: "सुरक्षित चिह्नित", requestSent: "अनुरोध भेजा गया",
+                     geoError: "स्थान नहीं मिला।", fetchError: "डेटा नहीं मिला।", mapError: "नक्शा लोड विफल।", newsApiError: "समाचार लोड विफल।", newsApiKeyMissing: "News API कुंजी गुम या अमान्य है!",
+                     badgeUnlocked: "बैज अनलॉक!",
+                     voiceAlertOn: "वॉइस अलर्ट सक्षम", voiceAlertOff: "वॉइस अलर्ट अक्षम", alertTrigger: "चेतावनी!",
+                     toggleTheme: "थीम", toggleTextSize: "पाठ आकार",
+                     personalDetailsTitle: "व्यक्तिगत और आपातकालीन विवरण", personalDetailsSubtitle: "यह जानकारी गोपनीयता के लिए आपके ब्राउज़र में स्थानीय रूप से संग्रहीत है।", backToDashboard: "वापस",
+                     personalInfoLegend: "व्यक्तिगत जानकारी", labelFullName: "पूरा नाम", labelDob: "जन्म तिथि", labelPhone: "फ़ोन", labelEmail: "ईमेल", labelAddress: "पता",
+                     medicalInfoLegend: "चिकित्सा विवरण", labelBloodType: "रक्त समूह", selectOption: "-- चुनें --", labelAllergies: "एलर्जी", labelMedications: "दवाएं", labelConditions: "स्थितियाँ", labelPhysicianName: "चिकित्सक", labelPhysicianPhone: "चिकित्सक फ़ोन",
+                     emergencyContactsLegend: "आपातकालीन संपर्क", labelContact1Name: "संपर्क 1 नाम", labelContact1Phone: "संपर्क 1 फ़ोन", labelContact1Relation: "संपर्क 1 संबंध", labelContact2Name: "संपर्क 2 नाम", labelContact2Phone: "संपर्क 2 फ़ोन", labelContact2Relation: "संपर्क 2 संबंध",
+                     saveDetailsButton: "विवरण सहेजें", detailsSavedSuccess: "विवरण सहेजा गया!", detailsSavedError: "सहेजा नहीं जा सका।",
+                     noActiveAlerts: "कोई सक्रिय अलर्ट नहीं।",
+                     newsFeedTitle: "नवीनतम समाचार फ़ीड", newsFeedSubtitle: "आपके स्थान या सामान्य सुरक्षा विषयों पर आधारित प्रासंगिक समाचार।", loadingNews: "समाचार लोड हो रहे हैं...", noNewsFound: "कोई प्रासंगिक समाचार लेख नहीं मिला।", newsSource: "स्रोत:", newsApiFail: "समाचार लोड करने में विफल। कृपया कनेक्शन या API कुंजी जांचें।",
+                     emergencyBtn: "आपातकाल", emergencySent: "अलर्ट भेजा गया!", emergencyConfirm: "स्थान के साथ आपातकालीन अलर्ट भेजा गया (नकली)।", emergencyWait: "कृपया स्थान की प्रतीक्षा करें...",
+                     findingSafePlace: "निकटतम सुरक्षित स्थान ढूँढा जा रहा है...", safePlaceRouteFound: "Google मानचित्र में {placeName} का मार्ग खोला जा रहा है।", noSafePlace: "मार्ग निर्धारित नहीं किया जा सका। स्थान अनुपलब्ध है?",
+                 }
+             };
+
+
+            // --- Initialization ---
+            function initApp() {
+                console.log("App Initializing...");
+                applyPreferences();
+                updateUIText(); // Initial translation
+                setupEventListeners();
+                getUserLocation(); // Start location fetching
+                fetchUserInfo();
+                updateBadgesUI();
+                loadDataFromCache();
+                 if (localStorage.getItem('personalDetails')) checkAndUnlockBadge('details');
+                showDashboardView(); // Start on dashboard
+                 checkSidebarToggleVisibility(); // Show/hide based on initial width
+                console.log("App Initialized.");
+            }
+
+            // --- View Switching Logic ---
+            function setActiveView(viewName) { // viewName: 'dashboard', 'details', 'news'
+                body.classList.remove('show-details', 'show-news');
+                contentArea.scrollTop = 0; // Scroll to top on view change
+
+                if (viewName === 'details') {
+                    body.classList.add('show-details');
+                    loadPersonalDetails();
+                    console.log("Switched to Details View");
+                } else if (viewName === 'news') {
+                    body.classList.add('show-news');
+                    fetchNewsData();
+                    console.log("Switched to News View");
+                } else { // Dashboard view
+                    console.log("Switched to Dashboard View");
+                    if (map) {
+                        setTimeout(() => map.resize(), 50); // Resize map slightly after transition might start
+                    }
+                    // No specific class needed
+                }
+                 // Update sidebar link active state
+                 quickLinks.forEach(link => link.classList.remove('active'));
+                 const activeLink = document.querySelector(`.quick-links a[href="#${viewName}"]`);
+                 if(activeLink) activeLink.classList.add('active');
+            }
+            function showDashboardView() { setActiveView('dashboard'); }
+            function showDetailsView() { setActiveView('details'); }
+            function showNewsView() { setActiveView('news'); }
+
+
+            // --- Geolocation & Location Info ---
+            function getUserLocation() {
+                if (navigator.geolocation) {
+                    console.log("Requesting geolocation...");
+                    mapLoadingElement.textContent = translate('mapLoading');
+                    mapLoadingElement.style.display = 'block';
+                    navigator.geolocation.getCurrentPosition(geolocationSuccess, geolocationError, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+                 } else {
+                     console.error("Geolocation not supported.");
+                     geolocationError();
+                 }
+            }
+            function geolocationSuccess(position) {
+                 currentCoords = [position.coords.longitude, position.coords.latitude];
+                 console.log("Geolocation Success:", currentCoords);
+                 mapLoadingElement.style.display = 'none';
+                 if (!map) {
+                     initMap(currentCoords);
+                 } else {
+                     map.setCenter(currentCoords);
+                     updateUserMarker(currentCoords);
+                 }
+                 updateMockSafePlaces(currentCoords); // Update safe place coords based on user
+                 fetchDisasterData(currentCoords);
+                 updateUserLocationUI(currentCoords);
+                 reverseGeocode(currentCoords); // Attempt to get city name
+            }
+            function geolocationError(error) {
+                console.error("Geolocation Error:", error);
+                mapLoadingElement.textContent = translate('geoError');
+                 mapLoadingElement.style.display = 'block'; // Keep it visible with error
+                // Use a default location (e.g., London) if geolocation fails
+                const defaultCoords = [-0.1276, 51.5072]; // London
+                currentCoords = defaultCoords;
+                if (!map) {
+                    initMap(defaultCoords);
+                }
+                updateMockSafePlaces(defaultCoords); // Update safe places relative to default
+                fetchDisasterData(defaultCoords, true); // Fetch data for default, maybe less critical
+                updateUserLocationUI(null, translate('unknownLocation'));
+                currentUserCity = "London"; // Set default city for news
+            }
+            function reverseGeocode(coords) {
+                 // Simple check for Mapbox token
+                 if (!mapboxgl.accessToken || mapboxgl.accessToken.startsWith('YOUR_')) {
+                     console.warn("Mapbox token missing or invalid, skipping reverse geocoding.");
+                     return;
+                 }
+                 fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${coords[0]},${coords[1]}.json?access_token=${mapboxgl.accessToken}&types=place`)
+                     .then(response => response.json())
+                     .then(data => {
+                         if (data.features && data.features.length > 0) {
+                             currentUserCity = data.features[0].text; // Get city name
+                             console.log("Reverse geocoded city:", currentUserCity);
+                             // Optionally update user location UI more descriptively
+                             if (userLocation.dataset.geoSet === "true") { // Only if geo was successful
+                                 userLocation.textContent = data.features[0].place_name;
+                             }
+                             // Re-fetch news if the view is active and city changed
+                             if (body.classList.contains('show-news')) {
+                                fetchNewsData();
+                             }
+                         } else {
+                             console.log("No city found via reverse geocoding.");
+                         }
+                     })
+                     .catch(err => console.error("Reverse geocoding failed:", err));
+             }
+             // Update mock safe place locations relative to user's current location
+             function updateMockSafePlaces(centerCoords) {
+                 if (!centerCoords) return;
+                 const [lng, lat] = centerCoords;
+                 mockSafePlaces[0].lat = lat + 0.015; mockSafePlaces[0].lng = lng - 0.01; // NE
+                 mockSafePlaces[1].lat = lat - 0.01; mockSafePlaces[1].lng = lng + 0.015; // SW
+                 mockSafePlaces[2].lat = lat + 0.005; mockSafePlaces[2].lng = lng + 0.02; // E
+                 mockSafePlaces[3].lat = lat - 0.02; mockSafePlaces[3].lng = lng - 0.008; // NW
+                 console.log("Updated mock safe place locations:", mockSafePlaces);
+             }
+
+
+            // --- Map Initialization & Updates (with 3D) ---
+            function initMap(centerCoords) {
+                 console.log("Init Mapbox with 3D:", centerCoords);
+                 if (!mapboxgl.accessToken || mapboxgl.accessToken.startsWith('YOUR_')) {
+                     mapLoadingElement.innerHTML = `<span style="color: red; font-weight: bold;">${translate('mapError')}: Mapbox Token Invalid!</span>`;
+                     mapLoadingElement.style.display = 'block';
+                     return;
+                 }
+                 try {
+                     map = new mapboxgl.Map({
+                         container: 'map',
+                         style: isDarkMode ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/standard', // Use standard for better 3D features
+                         center: centerCoords,
+                         zoom: 13, // Slightly more zoomed in for 3D
+                         pitch: 65, // Tilt the map for 3D view (0-85)
+                         bearing: -15, // Rotate the map slightly (0-360)
+                         projection: 'mercator' // Mercator often works well with terrain
+                     });
+
+                     map.on('style.load', () => {
+                         console.log("Map style loaded.");
+                         map.setFog({
+                            'range': [-0.5, 5], // Adjust fog range for desired effect
+                            'color': isDarkMode ? 'hsl(220, 25%, 10%)' : 'hsl(0, 0%, 100%)',
+                            'horizon-blend': 0.05, // Blend horizon smoothly
+                            'high-color': isDarkMode ? 'hsl(220, 40%, 20%)': '#add8e6', // Sky color high
+                            'space-color': isDarkMode ? 'hsl(220, 80%, 10%)' : '#00008b', // Sky color low
+                            'star-intensity': isDarkMode ? 0.2 : 0.0 // Stars for dark mode
+                        });
+
+                         // Add 3D Terrain Source and Layer
+                         map.addSource('mapbox-dem', {
+                             'type': 'raster-dem',
+                             'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+                             'tileSize': 512,
+                             'maxzoom': 14
+                         });
+                         map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 }); // Exaggerate terrain height
+
+                         // Add a sky layer for atmosphere
+                         map.addLayer({
+                             'id': 'sky',
+                             'type': 'sky',
+                             'paint': {
+                                 'sky-type': 'atmosphere',
+                                 'sky-atmosphere-sun': [0.0, 0.0], // Sun position [azimuth, altitude]
+                                 'sky-atmosphere-sun-intensity': 5
+                             }
+                         });
+
+                         addMapControls();
+                         updateUserMarker(centerCoords);
+                         addMockHeatmapLayer(); // Add heatmap if needed
+                         // Optionally add initial evac route
+                         // simulateEvacuationRoute(centerCoords, [centerCoords[0] + 0.02, centerCoords[1] + 0.01]);
+                         mapLoadingElement.style.display = 'none'; // Hide loading only after style is fully ready
+                     });
+
+                     map.on('load', () => {
+                        // This might fire before style.load sometimes, ensure loading is hidden in style.load
+                        console.log("Map loaded.");
+                     });
+
+                     map.on('error', (e) => {
+                         console.error("Mapbox Error:", e);
+                         mapLoadingElement.textContent = translate('mapError');
+                         mapLoadingElement.style.display = 'block';
+                     });
+                 } catch (error) {
+                     console.error("Map init error:", error);
+                     mapLoadingElement.textContent = translate('mapError');
+                     mapLoadingElement.style.display = 'block';
+                 }
+             }
+            function addMapControls() {
+                map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+                map.addControl(new mapboxgl.FullscreenControl(), 'top-right');
+                map.addControl(new mapboxgl.GeolocateControl({
+                    positionOptions: { enableHighAccuracy: true },
+                    trackUserLocation: true,
+                    showUserHeading: true
+                }), 'top-left');
+                 map.addControl(new mapboxgl.ScaleControl());
+            }
+            function updateUserMarker(coords) {
+                if (!map || !coords) return;
+                if (userMarker) {
+                    userMarker.setLngLat(coords);
+                } else {
+                    const el = document.createElement('div');
+                    el.className = 'user-marker';
+                    el.title = 'Your Location';
+                    userMarker = new mapboxgl.Marker(el)
+                        .setLngLat(coords)
+                        .addTo(map);
+                }
+                 // Add a popup to the marker (optional)
+                 // userMarker.setPopup(new mapboxgl.Popup({ offset: 25 }).setText('You are here.'));
+            }
+            function addMockHeatmapLayer() { /* ... (same as before - might need style adjustments for 3D) ... */ if (!map || !map.isStyleLoaded() || !currentCoords || map.getSource(riskPointsSourceId)) return; const points = []; const intensityFactor = 50; for (let i = 0; i < 100; i++) { points.push({ type: 'Feature', geometry: { type: 'Point', coordinates: [currentCoords[0] + (Math.random() - 0.5) * 0.1, currentCoords[1] + (Math.random() - 0.5) * 0.1] }, properties: { intensity: Math.random() * intensityFactor + (Math.random() > 0.8 ? 50 : 0) } }); } const highRiskCenter = [currentCoords[0] + 0.03, currentCoords[1] - 0.02]; for (let i = 0; i < 30; i++) { points.push({ type: 'Feature', geometry: { type: 'Point', coordinates: [highRiskCenter[0] + (Math.random() - 0.5) * 0.02, highRiskCenter[1] + (Math.random() - 0.5) * 0.02] }, properties: { intensity: Math.random() * 50 + 70 } }); } map.addSource(riskPointsSourceId, { type: 'geojson', data: { type: 'FeatureCollection', features: points } }); map.addLayer({ id: riskHeatmapLayerId, type: 'heatmap', source: riskPointsSourceId, maxzoom: 15, paint: { 'heatmap-weight': ['interpolate', ['linear'], ['get', 'intensity'], 0, 0, intensityFactor * 1.5, 1], 'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 9, 1, 15, 3], 'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'], 0, 'rgba(46, 204, 113, 0)', 0.2, 'rgba(46, 204, 113, 0.4)', 0.4, 'rgba(241, 196, 15, 0.6)', 0.6, 'rgba(230, 126, 34, 0.7)', 0.8, 'rgba(231, 76, 60, 0.8)', 1, 'rgba(192, 57, 43, 0.9)'], 'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 0, 5, 15, 30], 'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 10, 0.8, 15, 0.1] } }, 'land-structure-line'); /* Place heatmap below labels/lines */ }
+            function simulateEvacuationRoute(startCoords, endCoords) { /* ... (same as before) ... */ if (!map || !map.isStyleLoaded() || !startCoords || !endCoords) return; if (map.getLayer(simulatedEvacRouteLayerId)) map.removeLayer(simulatedEvacRouteLayerId); if (map.getSource(simulatedEvacRouteLayerId)) map.removeSource(simulatedEvacRouteLayerId); const routeGeoJSON = { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [startCoords, [(startCoords[0] + endCoords[0]) / 2 + (Math.random() - 0.5) * 0.01, (startCoords[1] + endCoords[1]) / 2 + (Math.random() - 0.5) * 0.01], endCoords] } }; map.addSource(simulatedEvacRouteLayerId, { type: 'geojson', data: routeGeoJSON }); map.addLayer({ id: simulatedEvacRouteLayerId, type: 'line', source: simulatedEvacRouteLayerId, layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#2980b9', 'line-width': 6, 'line-opacity': 0.8, 'line-dasharray': [0, 2, 2] } }); }
+
+            // --- Data Fetching & Display (User, Risks, Alerts) ---
+            function fetchUserInfo() { /* ... (same, now might store city) ... */
+                 const cachedUser = localStorage.getItem('userInfo'); if (cachedUser) { console.log("Using cached user info."); displayUserInfo(JSON.parse(cachedUser)); return; }
+                 // Fallback if randomuser.me fails
+                 const fallbackUser = { name: { first: "Safety", last: "User" }, picture: { large: userAvatar.src }, email: "user@example.com", location: { city: "Nearby", country: "Region" } };
+                 fetch('https://randomuser.me/api/?nat=us,gb,in,au,ca,nz')
+                    .then(response => response.ok ? response.json() : { results: [fallbackUser] }) // Basic fallback
+                    .then(data => { const user = data.results[0]; const userInfo = { name: `${user.name.first} ${user.name.last}`, avatar: user.picture.large, email: user.email, city: user.location.city, country: user.location.country }; currentUserCity = userInfo.city;
+                     displayUserInfo(userInfo); localStorage.setItem('userInfo', JSON.stringify(userInfo)); }).catch(error => { console.error('Error fetching user info:', error); displayUserInfo({ name: translate('loadingUser'), avatar: null, city: null, country: null }, translate('fetchError')); });
+            }
+            function displayUserInfo(userInfo, errorMsg = null) { /* ... (same) ... */ if (userInfo.avatar) { userAvatar.src = userInfo.avatar; userAvatar.alt = `${userInfo.name}'s Avatar`; } else { userAvatar.alt = 'Default User Avatar'; } userName.textContent = userInfo.name; if (errorMsg) { userName.textContent = translate('loadingUser'); } currentUserCity = userInfo.city; if (!userLocation.dataset.geoSet) { if (userInfo.city && userInfo.country) { userLocation.textContent = `${userInfo.city}, ${userInfo.country}`; } else { userLocation.textContent = translate('unknownLocation'); } } }
+            function updateUserLocationUI(coords, statusMessage = null) { /* ... (same) ... */ if (statusMessage) { userLocation.textContent = statusMessage; userLocation.dataset.geoSet = "false"; } else if (coords) { userLocation.textContent = `Lat: ${coords[1].toFixed(4)}, Lon: ${coords[0].toFixed(4)}`; userLocation.dataset.geoSet = "true"; } }
+            function fetchDisasterData(coords, isError = false) { /* ... (same mock data logic) ... */ const cacheKey = `disasterData_${coords ? coords.join(',') : 'default'}`; const cachedData = localStorage.getItem(cacheKey); if (cachedData) { try { const data = JSON.parse(cachedData); displayRiskPercentages(data.risks); displayTimelineAlerts(data.alerts); checkCriticalAlerts(data.alerts); return; } catch (e) { localStorage.removeItem(cacheKey); } } let mockRisks = [ { type: 'Flood', key: 'floodRisk', risk: Math.random() * 30, icon: '🌊' }, { type: 'Earthquake', key: 'earthquakeRisk', risk: Math.random() * 15, icon: '🌍' }, { type: 'Wildfire', key: 'wildfireRisk', risk: Math.random() * 50 + (coords && coords[1] > 34 && coords[1] < 40 ? 20 : 0), icon: '🔥' }, { type: 'Storm', key: 'stormRisk', risk: Math.random() * 40, icon: '🌪️' } ]; if (coords && coords[1] < 30) mockRisks[3].risk = Math.min(100, mockRisks[3].risk + 20); if (coords && Math.abs(coords[0] + 118) < 5) mockRisks[1].risk = Math.min(100, mockRisks[1].risk + 15); let mockAlerts = [ { type: 'Flood', key: 'floodAlert', severity: 'Warning', etaMinutes: 180, location: 'River North', icon: '🌊', critical: false, timestamp: Date.now() - 3 * 60 * 60 * 1000 }, { type: 'Storm', key: 'stormAlert', severity: 'Watch', etaMinutes: 360, location: 'Coastal Areas', icon: '🌪️', critical: false, timestamp: Date.now() - 6 * 60 * 60 * 1000 }, { type: 'Info', key: 'infoAlert', severity: 'Update', message: 'Emergency shelters open at City Hall.', location: 'Downtown', icon: 'ℹ️', critical: false, timestamp: Date.now() - 30 * 60 * 1000 } ]; const criticalIndex = Math.floor(Math.random() * mockAlerts.length); if (Math.random() > 0.6) { mockAlerts[criticalIndex].etaMinutes = Math.floor(Math.random() * 60) + 10; mockAlerts[criticalIndex].critical = true; mockAlerts[criticalIndex].timestamp = Date.now() - mockAlerts[criticalIndex].etaMinutes * 60 * 1000; const criticalType = mockAlerts[criticalIndex].type; const riskIndex = mockRisks.findIndex(r => r.type === criticalType); if (riskIndex !== -1) mockRisks[riskIndex].risk = Math.min(100, mockRisks[riskIndex].risk + 40 + Math.random() * 20); } if (Math.random() > 0.85) { mockAlerts.push({ type: 'Earthquake', key: 'earthquakeAlert', severity: 'Detected', magnitude: (Math.random() * 2 + 4).toFixed(1), location: 'Regional Fault Line', icon: '🌍', critical: true, etaMinutes: 0, timestamp: Date.now() - 5 * 60 * 1000 }); mockRisks[1].risk = Math.min(100, mockRisks[1].risk + 50); } const mockData = { risks: mockRisks, alerts: mockAlerts }; if (isError) { mockData.risks.forEach(r => r.risk *= 0.5); mockData.alerts = mockData.alerts.filter(a => !a.critical); } displayRiskPercentages(mockData.risks); displayTimelineAlerts(mockData.alerts); checkCriticalAlerts(mockData.alerts); try { localStorage.setItem(cacheKey, JSON.stringify(mockData)); } catch (e) { console.warn("Could not cache disaster data:", e); } }
+            function displayRiskPercentages(risks) { /* ... (same) ... */ riskGrid.innerHTML = ''; if (!risks || risks.length === 0) { riskGrid.innerHTML = `<p data-translate-key="fetchError">${translate('fetchError')}</p>`; return; } risks.forEach((risk, index) => { const p = Math.round(risk.risk); let l = 'low', lk = 'lowRisk'; if (p > 65) { l = 'high'; lk = 'highRisk'; } else if (p > 35) { l = 'medium'; lk = 'mediumRisk'; } const c = document.createElement('div'); c.className = `risk-card fade-in delay-${index}`; c.dataset.riskLevel = l; c.innerHTML = `<div class="icon">${risk.icon}</div><h4 data-translate-key="${risk.key}">${translate(risk.key)||risk.type}</h4><div class="risk-percentage">${p}%</div><div class="risk-level" data-translate-key="${lk}">${translate(lk)}</div>`; riskGrid.appendChild(c); }); }
+            function displayTimelineAlerts(alerts) { /* ... Updated to use timestamp if ETA missing ... */ alertList.innerHTML = ''; if (!alerts || alerts.length === 0) { alertList.innerHTML = `<li class="alert-item placeholder-alert fade-in"><div class="icon">✅</div><div class="content"><p data-translate-key="noActiveAlerts">${translate('noActiveAlerts')}</p></div></li>`; return; } alerts.sort((a, b) => (a.etaMinutes ?? Infinity) - (b.etaMinutes ?? Infinity)); alerts.forEach((alert, index) => { const item = document.createElement('li'); item.className = `alert-item alert-${alert.type.toLowerCase()}`; item.style.animationDelay = `${index * 0.1}s`; let timeText = '', locationText = alert.location ? `${translate('near')} ${alert.location}` : ''; if (alert.etaMinutes === 0) { timeText = `<span class="time">${translate('now')}</span>`; } else if (alert.etaMinutes && alert.etaMinutes < 60) { timeText = `<span class="time">${translate('eta')}: ~${alert.etaMinutes} ${translate('minutes')}</span>`; } else if (alert.etaMinutes && alert.etaMinutes >= 60) { const h = Math.floor(alert.etaMinutes / 60), m = alert.etaMinutes % 60; timeText = `<span class="time">${translate('eta')}: ~${h} ${translate('hours')}${m > 0 ? ` ${m} ${translate('minutes')}` : ''}</span>`; } else if (alert.magnitude) { timeText = `<span class="time">Magnitude ${alert.magnitude}</span>`; locationText = alert.location ? `${translate('epicenterNear')} ${alert.location}` : ''; } else if (alert.message) { timeText = `<span class="time">${alert.message}</span>`; } else if (alert.timestamp) { // Fallback to time ago from timestamp
+                                const timeAgo = formatTimeAgo(new Date(alert.timestamp)); timeText = `<span class="time">${timeAgo}</span>`; } item.innerHTML = `<div class="icon">${alert.icon}</div><div class="content"><p data-translate-key="${alert.key}">${translate(alert.key)||alert.severity}</p>${timeText}${locationText ? `<span class="location">${locationText}</span>` : ''}</div>`; alertList.appendChild(item); }); }
+
+            // --- News Feed Fetching & Display ---
+            async function fetchNewsData() { /* ... (same as before) ... */ if (!NEWS_API_KEY || NEWS_API_KEY === 'YOUR_NEWS_API_KEY' || NEWS_API_KEY.length < 20) { console.error("News API Key is missing or invalid!"); displayNewsArticles(null, translate('newsApiKeyMissing')); return; } newsListContainer.innerHTML = ''; newsLoadingErrorElement.textContent = translate('loadingNews'); newsLoadingErrorElement.style.display = 'block'; const generalQuery = "disaster OR emergency OR alert OR safety OR preparedness OR evacuation OR rescue OR flood OR earthquake OR wildfire OR storm"; let query = currentUserCity ? `("${currentUserCity}") AND (${generalQuery})` : generalQuery; query = currentUserCity ? `${currentUserCity} disaster OR ${currentUserCity} emergency` : generalQuery; const cacheKey = `news_${query}_${currentLanguage}`; const cachedNews = localStorage.getItem(cacheKey); const now = new Date().getTime(); if (cachedNews) { const parsedCache = JSON.parse(cachedNews); if (now - parsedCache.timestamp < 30 * 60 * 1000) { console.log("Using cached news for query:", query); displayNewsArticles(parsedCache.articles); return; } else { localStorage.removeItem(cacheKey); } } console.log("Fetching news from API for query:", query); const url = `${NEWS_API_URL}?q=${encodeURIComponent(query)}&sortBy=publishedAt&language=${currentLanguage}&pageSize=20&apiKey=${NEWS_API_KEY}`; try { const response = await fetch(url); if (!response.ok) { const errorData = await response.json(); throw new Error(`News API Error (${response.status}): ${errorData.message || 'Unknown error'}`); } const data = await response.json(); if (data.status === "ok") { const cacheData = { timestamp: now, articles: data.articles }; try { localStorage.setItem(cacheKey, JSON.stringify(cacheData)); } catch(e) { console.warn("Could not cache news data:", e); } displayNewsArticles(data.articles); } else { throw new Error(`News API Error: ${data.message || 'API returned status error'}`); } } catch (error) { console.error('Error fetching news:', error); displayNewsArticles(null, `${translate('newsApiFail')} (${error.message})`); } }
+            function displayNewsArticles(articles, errorMessage = null) { /* ... (same as before) ... */ newsListContainer.innerHTML = ''; if (errorMessage) { newsLoadingErrorElement.textContent = errorMessage; newsLoadingErrorElement.style.display = 'block'; return; } if (!articles || articles.length === 0) { newsLoadingErrorElement.textContent = translate('noNewsFound'); newsLoadingErrorElement.style.display = 'block'; return; } newsLoadingErrorElement.style.display = 'none'; articles.forEach((article, index) => { const title = article.title || 'No Title'; const description = article.description || ''; const url = article.url; const imageUrl = article.urlToImage || ''; const sourceName = article.source?.name || 'Unknown Source'; const publishedAt = article.publishedAt ? new Date(article.publishedAt) : null; let timeAgo = ''; if (publishedAt) { timeAgo = formatTimeAgo(publishedAt); } if (!url) return; const card = document.createElement('div'); card.className = 'news-card fade-in'; card.style.animationDelay = `${index * 0.05}s`; card.innerHTML = `<a href="${url}" target="_blank" rel="noopener noreferrer"><img class="news-image" src="${imageUrl}" alt="" loading="lazy" onerror="this.style.display='none';"><div class="news-content"><h4 class="news-title">${title}</h4><p class="news-description">${description}</p><div class="news-meta"><span class="news-source" title="${sourceName}">${translate('newsSource')} ${sourceName}</span><span class="news-time">${timeAgo}</span></div></div></a>`; newsListContainer.appendChild(card); }); }
+            function formatTimeAgo(date) { /* ... (same as before) ... */ const seconds = Math.floor((new Date() - date) / 1000); let interval = Math.floor(seconds / 31536000); if (interval >= 1) return `${interval} year${interval > 1 ? 's' : ''} ago`; interval = Math.floor(seconds / 2592000); if (interval >= 1) return `${interval} month${interval > 1 ? 's' : ''} ago`; interval = Math.floor(seconds / 86400); if (interval >= 1) return `${interval} day${interval > 1 ? 's' : ''} ago`; interval = Math.floor(seconds / 3600); if (interval >= 1) return `${interval} hour${interval > 1 ? 's' : ''} ago`; interval = Math.floor(seconds / 60); if (interval >= 1) return `${interval} minute${interval > 1 ? 's' : ''} ago`; return `few seconds ago`; }
+
+            // --- Personal Details Form Handling ---
+            function handleDetailsFormSubmit(event) { /* ... (same) ... */ event.preventDefault(); console.log("Saving details..."); const formData = new FormData(detailsForm); const details = {}; formData.forEach((value, key) => { details[key] = value.trim(); }); try { localStorage.setItem('personalDetails', JSON.stringify(details)); showNotification(translate('detailsSavedSuccess'), 'success'); checkAndUnlockBadge('details'); } catch (error) { console.error("Error saving details:", error); showNotification(translate('detailsSavedError'), 'danger'); } }
+            function loadPersonalDetails() { /* ... (same) ... */ const json = localStorage.getItem('personalDetails'); if (json) { console.log("Loading saved details..."); try { const details = JSON.parse(json); for (const key in details) { if (detailsForm.elements[key]) detailsForm.elements[key].value = details[key]; } } catch (e) { console.error("Error parsing details:", e); localStorage.removeItem('personalDetails'); } } else { /* Optional prefill */ const user = JSON.parse(localStorage.getItem('userInfo') || '{}'); if (detailsForm.elements.fullName && !detailsForm.elements.fullName.value && user.name) detailsForm.elements.fullName.value = user.name; if (detailsForm.elements.email && !detailsForm.elements.email.value && user.email) detailsForm.elements.email.value = user.email; } }
+
+            // --- User Actions (Safe/Help/Emergency Buttons) ---
+            function handleSafeButtonClick() { /* ... (same) ... */ safeButton.classList.add('confirmed'); safeButton.disabled = true; safeButton.querySelector('span').textContent = translate('markedSafe'); helpButton.classList.remove('confirmed'); helpButton.disabled = false; helpButton.querySelector('span').textContent = translate('needHelp'); console.log("User marked SAFE."); showNotification(translate('markedSafe'), 'success'); checkAndUnlockBadge('safe'); }
+            function handleHelpButtonClick() { /* ... (same) ... */ helpButton.classList.add('confirmed'); helpButton.disabled = true; helpButton.querySelector('span').textContent = translate('requestSent'); safeButton.classList.remove('confirmed'); safeButton.disabled = false; safeButton.querySelector('span').textContent = translate('imSafe'); console.log("User requested HELP."); showNotification(translate('requestSent'), 'danger'); speakAlert(translate('requestSent')); }
+            function handleEmergencyButtonClick() {
+                if (isEmergencySent) return; // Prevent multiple sends
+
+                if (!currentCoords) {
+                    showNotification(translate('emergencyWait'), 'warning');
+                    // Try to get location again quickly? Or just wait.
+                    getUserLocation();
+                    return;
+                }
+
+                // --- SIMULATION ---
+                // In a real app, this would be an API call to your backend:
+                // fetch('/api/emergency', { method: 'POST', body: JSON.stringify({ lat: currentCoords[1], lon: currentCoords[0], timestamp: Date.now() }), headers: {'Content-Type': 'application/json'} })
+                //   .then(response => { if (!response.ok) throw new Error('API Error'); /* handle success */ })
+                //   .catch(error => { /* handle error */ });
+
+                console.log(`--- EMERGENCY ALERT (SIMULATED) ---`);
+                console.log(`Location: Lat ${currentCoords[1]}, Lon ${currentCoords[0]}`);
+                console.log(`Timestamp: ${new Date().toISOString()}`);
+                console.log(`--- END SIMULATION ---`);
+
+
+                // Update button state
+                isEmergencySent = true;
+                emergencyButton.classList.add('sent');
+                emergencyButton.disabled = true;
+                emergencyButton.querySelector('span').textContent = translate('emergencySent');
+                emergencyButton.title = translate('emergencySent'); // Update title
+
+                showNotification(translate('emergencyConfirm'), 'danger', 5000); // Longer duration, danger type
+                speakAlert(`${translate('alertTrigger')}! ${translate('emergencyConfirm')}`);
+
+                // Optional: Reset button after some time?
+                // setTimeout(() => {
+                //     isEmergencySent = false;
+                //     emergencyButton.classList.remove('sent');
+                //     emergencyButton.disabled = false;
+                //     emergencyButton.querySelector('span').textContent = translate('emergencyBtn');
+                //     emergencyButton.title = 'Send Emergency Alert with Location';
+                // }, 30000); // Reset after 30 seconds
+            }
+
+             // --- Route to Safe Place ---
+             function handleSafeRouteClick() {
+                 console.log("Finding nearest safe place route...");
+                 if (!currentCoords) {
+                     showNotification(translate('noSafePlace'), 'warning');
+                     getUserLocation(); // Try to get location
+                     return;
+                 }
+
+                 showNotification(translate('findingSafePlace'), 'info');
+
+                 let closestPlace = null;
+                 let minDistance = Infinity;
+                 const [userLng, userLat] = currentCoords;
+
+                 mockSafePlaces.forEach(place => {
+                     // Simple distance calculation (degrees, not accurate for large distances but fine locally)
+                     const dist = Math.sqrt(Math.pow(userLat - place.lat, 2) + Math.pow(userLng - place.lng, 2));
+                     if (dist < minDistance) {
+                         minDistance = dist;
+                         closestPlace = place;
+                     }
+                 });
+
+                 if (closestPlace) {
+                     const origin = `${userLat},${userLng}`;
+                     const destination = `${closestPlace.lat},${closestPlace.lng}`;
+                     // Construct Google Maps URL (driving directions)
+                     const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`;
+
+                     console.log(`Opening Google Maps route to ${closestPlace.name}: ${googleMapsUrl}`);
+                     showNotification(translate('safePlaceRouteFound').replace('{placeName}', closestPlace.name), 'success');
+                     window.open(googleMapsUrl, '_blank'); // Open in new tab
+
+                 } else {
+                     console.error("Could not find a closest safe place.");
+                     showNotification(translate('noSafePlace'), 'danger');
+                 }
+             }
+
+
+            // --- Accessibility & Preferences ---
+            function applyPreferences() { /* ... (same) ... */ if (isDarkMode) body.classList.add('dark-mode'); else body.classList.remove('dark-mode'); if (isLargeText) body.classList.add('large-text'); else body.classList.remove('large-text'); languageSwitcher.value = currentLanguage; document.documentElement.lang = currentLanguage.split('-')[0]; updateVoiceAlertIcon(); if (map && map.isStyleLoaded()) { map.setStyle(isDarkMode ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/standard'); } } // Adjust map style
+            function toggleTheme() { isDarkMode = !isDarkMode; localStorage.setItem('theme', isDarkMode ? 'dark' : 'light'); applyPreferences(); /* Map style is reapplied in applyPreferences */ }
+            function toggleTextSize() { isLargeText = !isLargeText; localStorage.setItem('textSize', isLargeText ? 'large' : 'normal'); applyPreferences(); if (map) map.resize(); /* Resize map might be needed */ }
+            function changeLanguage(lang) { /* ... (same - re-translates UI, might refetch data) ... */ currentLanguage = lang; localStorage.setItem('language', currentLanguage); document.documentElement.lang = currentLanguage.split('-')[0]; updateUIText(); if (currentCoords) { fetchDisasterData(currentCoords); reverseGeocode(currentCoords); } else { fetchDisasterData(null, true); } if (body.classList.contains('show-news')) fetchNewsData(); console.log("Language changed to:", currentLanguage); }
+            function updateUIText() { /* ... (Updates all keys including new ones) ... */ console.log("Updating UI text for:", currentLanguage); document.querySelectorAll('[data-translate-key]').forEach(translateElement); if (!safeButton.classList.contains('confirmed')) safeButton.querySelector('span').textContent = translate('imSafe'); else safeButton.querySelector('span').textContent = translate('markedSafe'); if (!helpButton.classList.contains('confirmed')) helpButton.querySelector('span').textContent = translate('needHelp'); else helpButton.querySelector('span').textContent = translate('requestSent'); if (!isEmergencySent) emergencyButton.querySelector('span').textContent = translate('emergencyBtn'); else emergencyButton.querySelector('span').textContent = translate('emergencySent'); if (userName.dataset.translateKey) translateElement(userName); if (userLocation.dataset.translateKey && !userLocation.dataset.geoSet) translateElement(userLocation); document.querySelectorAll('.badge span[data-translate-key]').forEach(translateElement); document.querySelectorAll('#details-form option[data-translate-key]').forEach(translateElement); document.title = `${translate('appTitle')} - Safety Hub`; /* Update page title */ }
+            function translateElement(el) { /* ... (same - handles various element types) ... */ const key = el.dataset.translateKey; const translation = translate(key); if (translation) { let textNode = Array.from(el.childNodes).find(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== ''); if (textNode && el.tagName !== 'OPTION' && !el.querySelector('svg')) { textNode.textContent = translation; } else if (el.tagName === 'BUTTON' || el.tagName === 'A') { const span = el.querySelector('span'); if (span) span.textContent = translation; else if (!el.querySelector('svg')) el.textContent = translation; } else if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') { if (el.placeholder && key.toLowerCase().includes('label')) { /* Don't overwrite placeholders with labels */ } else if (el.placeholder) el.placeholder = translation; } else if (el.tagName === 'OPTION' && el.value === "") { el.textContent = translation; } else if (el.tagName !== 'OPTION') { el.textContent = translation; } } }
+            function translate(key) { /* ... (same) ... */ return translations[currentLanguage]?.[key] || translations.en[key] || key; }
+
+            // --- Voice Alerts ---
+            function toggleVoiceAlerts() { /* ... (same) ... */ areVoiceAlertsEnabled = !areVoiceAlertsEnabled; localStorage.setItem('voiceAlerts', areVoiceAlertsEnabled ? 'enabled' : 'disabled'); updateVoiceAlertIcon(); const msg = areVoiceAlertsEnabled ? translate('voiceAlertOn') : translate('voiceAlertOff'); showNotification(msg, 'info'); speakAlert(msg); }
+            function updateVoiceAlertIcon() { /* ... (same) ... */ if (areVoiceAlertsEnabled) { voiceOnIcon.style.display = 'inline'; voiceOffIcon.style.display = 'none'; voiceAlertButton.classList.add('active'); voiceAlertButton.title = "Disable Voice Alerts"; } else { voiceOnIcon.style.display = 'none'; voiceOffIcon.style.display = 'inline'; voiceAlertButton.classList.remove('active'); voiceAlertButton.title = "Enable Voice Alerts"; } }
+            function speakAlert(text) { /* ... (same) ... */ if (!areVoiceAlertsEnabled || !('speechSynthesis' in window)) return; try { window.speechSynthesis.cancel(); const utt = new SpeechSynthesisUtterance(text); utt.lang = currentLanguage.split('-')[0]; utt.pitch = 1.1; utt.rate = 1.0; window.speechSynthesis.speak(utt); } catch (e) { console.error("Speech synthesis error:", e); } }
+            function checkCriticalAlerts(alerts) { /* ... (same) ... */ if (!alerts || !areVoiceAlertsEnabled) return; const critical = alerts.find(a => a.critical && (a.etaMinutes === 0 || (a.etaMinutes && a.etaMinutes < 15) || a.magnitude)); if (critical) { let msg = `${translate('alertTrigger')}! ${translate(critical.key) || critical.severity}.`; if (critical.etaMinutes > 0) msg += ` ${translate('eta')} ${critical.etaMinutes} ${translate('minutes')}.`; else if (critical.magnitude) msg += ` Magnitude ${critical.magnitude}.`; if (critical.location) msg += ` ${translate('near')} ${critical.location}.`; speakAlert(msg); } }
+
+            // --- Gamification ---
+            function checkAndUnlockBadge(badgeId, delay = 0) { /* ... (same) ... */ if (!unlockedBadges.includes(badgeId)) { setTimeout(() => { unlockedBadges.push(badgeId); localStorage.setItem('unlockedBadges', JSON.stringify(unlockedBadges)); updateBadgesUI(); showBadgeNotification(badgeId); }, delay); } }
+            function updateBadgesUI() { /* ... (same - handles SVG colors) ... */ document.querySelectorAll('.badge').forEach(badgeEl => { const id = badgeEl.dataset.badgeId; const img = badgeEl.querySelector('img'); if (unlockedBadges.includes(id)) { badgeEl.classList.add('unlocked'); let color = '#7f8c8d'; /* Default unlocked color */ if (id === 'details') color = '#3498db'; else if (id === 'safe') color = '#2ecc71'; else if (id === 'informed') color = '#f39c12'; else if (id === 'prepared') color = '#9b59b6'; img.src = img.src.replace(/fill='%23.*? Vargas+(%23[0-9a-fA-F]{6})/g, `fill='${color}'`); } else { badgeEl.classList.remove('unlocked'); img.src = img.src.replace(/fill='%23.*? Vargas+(%23[0-9a-fA-F]{6})/g, "fill='%23cccccc'"); } }); }
+            function showBadgeNotification(badgeId) { /* ... (same) ... */ const badgeElement = document.getElementById(`badge-${badgeId}`); const badgeName = badgeElement ? translate(badgeElement.querySelector('span').dataset.translateKey) : badgeId; badgeNotificationText.textContent = `${translate('badgeUnlocked')} ${badgeName}!`; badgeNotification.className = 'badge-notification success show'; setTimeout(() => { badgeNotification.classList.remove('show'); }, 4000); }
+
+            // --- Sidebar Toggle ---
+            function toggleSidebar() {
+                sidebar.classList.toggle('open');
+                 checkSidebarToggleVisibility(); // Ensure button visibility updates
+            }
+            function checkSidebarToggleVisibility() {
+                // Show toggle button only if sidebar is collapsible (on smaller screens)
+                if (window.innerWidth <= 992) {
+                    sidebarToggle.style.display = 'flex';
+                    if (!sidebar.classList.contains('open')) { // Initially collapsed on mobile
+                        sidebar.classList.add('collapsed');
+                    }
+                 } else {
+                     sidebarToggle.style.display = 'none';
+                     sidebar.classList.remove('collapsed', 'open'); // Ensure open on desktop
+                 }
+            }
+
+            // --- Utility Functions ---
+            function showNotification(message, type = 'info', duration = 3500) { /* ... (Added duration param) ... */ console.log(`[${type.toUpperCase()}] Notify: ${message}`); badgeNotificationText.textContent = message; badgeNotification.className = `badge-notification ${type} show`; setTimeout(() => { badgeNotification.classList.remove('show'); }, duration); }
+            function loadDataFromCache() { /* ... (same) ... */ const cachedUser = localStorage.getItem('userInfo'); if (cachedUser) displayUserInfo(JSON.parse(cachedUser)); }
+
+            // --- Event Listeners Setup ---
+            function setupEventListeners() {
+                themeToggle.addEventListener('click', toggleTheme);
+                textSizeToggle.addEventListener('click', toggleTextSize);
+                languageSwitcher.addEventListener('change', (e) => changeLanguage(e.target.value));
+                safeButton.addEventListener('click', handleSafeButtonClick);
+                helpButton.addEventListener('click', handleHelpButtonClick);
+                emergencyButton.addEventListener('click', handleEmergencyButtonClick); // Listener for new button
+                voiceAlertButton.addEventListener('click', toggleVoiceAlerts);
+                sidebarToggle.addEventListener('click', toggleSidebar);
+                brandLink.addEventListener('click', (e) => { e.preventDefault(); showDashboardView(); });
+
+                // Quick Links Handler (Updated for View Switching and Safe Route)
+                quickLinks.forEach(link => {
+                     link.addEventListener('click', (e) => {
+                         e.preventDefault();
+                         const linkId = link.id;
+                         const href = link.getAttribute('href'); // Get the target view/action
+
+                         if (href === '#safe-route') {
+                             handleSafeRouteClick();
+                         } else if (href === '#details') {
+                              setActiveView('details');
+                         } else if (href === '#news-feed') {
+                              setActiveView('news');
+                         } else {
+                             // For other links (History, Preparedness), simulate action on dashboard
+                             setActiveView('dashboard'); // Ensure dashboard is shown
+                             let sectionName = translate(link.querySelector('span').dataset.translateKey);
+                             showNotification(`Showing ${sectionName} (Feature Placeholder)`, 'info');
+                             if (linkId === 'link-preparedness') checkAndUnlockBadge('prepared');
+                             // Example: scroll to relevant section if it existed
+                             // if (href === '#history' && document.getElementById('timeline-alerts')) {
+                             //     document.getElementById('timeline-alerts').scrollIntoView({ behavior: 'smooth' });
+                             // }
+                         }
+
+                         // Close sidebar on mobile after click
+                         if (window.innerWidth <= 992 && sidebar.classList.contains('open')) {
+                              toggleSidebar();
+                         }
+                     });
+                });
+
+                // Details Page Listeners
+                detailsForm.addEventListener('submit', handleDetailsFormSubmit);
+                backToDashboardButtonDetails.addEventListener('click', showDashboardView);
+                 backToDashboardButtonNews.addEventListener('click', showDashboardView);
+
+                // Close sidebar on outside click (Mobile)
+                 document.addEventListener('click', (event) => { if (window.innerWidth <= 992 && sidebar.classList.contains('open')) { const isClickInsideSidebar = sidebar.contains(event.target); const isClickOnToggleButton = sidebarToggle.contains(event.target); if (!isClickInsideSidebar && !isClickOnToggleButton) toggleSidebar(); } });
+
+                 // Responsive Sidebar Toggle Visibility
+                 window.addEventListener('resize', checkSidebarToggleVisibility);
+
+                console.log("Event listeners set up.");
+            }
+
+            // --- Start Application ---
+            initApp();
+
+        }); // End DOMContentLoaded
+    </script>
+
+</body>
+</html>
